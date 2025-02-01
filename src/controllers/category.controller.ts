@@ -8,7 +8,8 @@ interface CustomRequest extends Request {
 export const addCategory = async (req: CustomRequest, res: Response): Promise<void> => {
     try {
         const {icon, title} = req.body
-        const userId = req.user._id
+        const userId = req.user?._id;
+        console.log("userId", userId)
 
         const category = await Category.findOne({title})
 

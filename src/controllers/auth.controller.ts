@@ -34,13 +34,17 @@ export const signupUser = async (req: Request, res: Response) => {
 
     if (newUser) {
       await newUser.save();
-      generateTokenAndeSetCookie(newUser._id.toString(), res);
+      const token = generateTokenAndeSetCookie(newUser._id.toString(), res);
 
       res.status(201).json({
-        _id: newUser._id,
-        fullname: newUser.fullname,
-        email: newUser.email,
+        user: {
+          _id: newUser._id,
+          fullname: newUser.fullname,
+          email: newUser.email,
+        },
+        token
       });
+      
     } else {
       return res.status(400).json({ error: "Invalid user data" });
     }
@@ -70,16 +74,18 @@ export const loginUser = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    generateTokenAndeSetCookie(user._id.toString(), res);
+    if (isPasswordCorrect) {
+      const token = generateTokenAndeSetCookie(user._id.toString(), res);
+      res.status(200).json({
+        user: {
+          _id: user._id,
+          fullname: user.fullname,
+          email: user.email,
+        },
+        token
+      });
+    }
 
-    res.status(200).json({
-      user: {
-        _id: user._id,
-        fullname: user.fullname,
-        email: user.email,
-      },
-      message: "Login successful"
-    });
   } catch (error) {
     console.error("Error in login controller:", error);
     res.status(500).json({ message: "Internal server error" });

@@ -12,17 +12,21 @@ interface CookieOptions {
     secure: boolean;
 }
 
-const generateTokenAndeSetCookie = (userId: string, res: Response): void => {
-    const token = jwt.sign({ userId } as TokenPayload, process.env.JWT_SECRET_KEY!, {
-        expiresIn: "15d"
-    });
+const generateTokenAndeSetCookie = (userId: string, res: Response): string => {
+    const token = jwt.sign(
+        { userId } as TokenPayload, 
+        process.env.JWT_SECRET_KEY!, 
+        { expiresIn: "15d" }
+    );
 
     res.cookie("jwt", token, {
-        maxAge: 15 * 24 * 60 * 60 * 1000, //Milliseconds
-        httpOnly: true, //prevent XSS attacks (cross-site scripting)
-        sameSite: "strict", //To prevent CSRF attacks (cross-site request forgery attacks)
-        secure: process.env.NODE_ENV !== "development"
+        maxAge: 15 * 24 * 60 * 60 * 1000, // 15 days in milliseconds
+        httpOnly: true, // Prevent XSS attacks
+        sameSite: "strict", // Prevent CSRF attacks
+        secure: process.env.NODE_ENV !== "development" // Use secure in production
     } as CookieOptions);
+
+    return token;
 }
 
-export default generateTokenAndeSetCookie
+export default generateTokenAndeSetCookie;

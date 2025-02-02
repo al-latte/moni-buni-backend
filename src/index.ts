@@ -1,5 +1,5 @@
 // Package imports
-import express, { Request, Response } from "express";
+import express, { Request, Response, ErrorRequestHandler } from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -14,17 +14,35 @@ import walletRoutes from "./routes/wallet.routes";
 // Variables
 const app = express();
 const PORT = process.env.PORT || 5000;
+const FRONTEND_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://moni-buni-frontend.onrender.com'
+  : 'http://localhost:3000';
 
 // Configurations
 dotenv.config();
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: FRONTEND_URL,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+  if (err.name === 'CORSError') {
+    console.error('CORS Error:', err);
+    res.status(403).json({
+      error: 'CORS error',
+      message: err.message
+    });
+    return;
+  }
+  next(err);
+};
+
+app.use(errorHandler);
+
 app.use(express.json());
 app.use(cookieParser());
 

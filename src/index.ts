@@ -1,5 +1,5 @@
 // Package imports
-import express from "express";
+import express, { Request, Response } from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -27,6 +27,10 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+app.get("/health", async (req: Request, res: Response) => {
+  res.send({message: "Health OK!"})
+})
 
 // Routes
 app.use("/api/auth", authRoutes);

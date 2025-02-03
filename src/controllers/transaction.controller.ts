@@ -90,3 +90,29 @@ export const getTransactions = async (req: Request, res: Response): Promise<void
         res.status(500).json({ error: "Internal server error" });
     }
 };
+
+export const updateTransaction = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+  
+      const updatedTransaction = await Transaction.findByIdAndUpdate(
+        id,
+        updateData,
+        { new: true }
+      );
+  
+      if (!updatedTransaction) {
+        res.status(404).json({ message: 'Transaction not found' });
+        return;
+      }
+  
+      res.status(200).json({
+        message: 'Transaction updated successfully',
+        transaction: updatedTransaction,
+      });
+    } catch (error) {
+        console.error("Error in updateTransaction controller", (error as Error).message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+  };

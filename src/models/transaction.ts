@@ -19,11 +19,12 @@ const transactionSchema = new Schema({
     },
     transactionType: {
         type: String,
-        required: true
+        required: true,
+        enum: ["income", "expense"]
     },
     date: {
         type: Date,
-        reqiured: true,
+        required: true,
         default: Date.now
     },
     wallet: {

@@ -6,7 +6,7 @@ const router = express.Router()
 
 router.post("/add", authenticate, addWallet)
 
-router.put("/edit/:id", authenticate, editWallet)
+router.put("/update/:id", authenticate, editWallet)
 
 router.get("/:userId", authenticate, getWallets)
 

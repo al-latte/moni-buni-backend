@@ -20,7 +20,7 @@ const transactionSchema = new Schema({
     transactionType: {
         type: String,
         required: true,
-        enum: ["income", "expense"]
+        enum: ["expense", "income"]
     },
     date: {
         type: Date,

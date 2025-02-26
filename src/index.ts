@@ -11,6 +11,7 @@ import transactionRoutes from "./routes/transaction.routes";
 import categoryRoutes from "./routes/category.routes";
 import walletRoutes from "./routes/wallet.routes";
 import budgetRoutes from "./routes/budget.routes";
+import userRoutes from "./routes/user.routes";
 
 // Variables
 const app = express();
@@ -57,6 +58,7 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/wallets", walletRoutes);
 app.use("/api/budgets", budgetRoutes);
+app.use("/api/user", userRoutes);
 
 // Server
 app.listen(PORT, () => {

@@ -62,7 +62,7 @@ const budgetSchema = new Schema<IBudget>(
     categories: [
       {
         categoryId: {
-          type: mongoose.Schema.Types.ObjectId,
+          type: Schema.Types.ObjectId,
           ref: "Category",
           required: true,
         },

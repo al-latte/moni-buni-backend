@@ -102,12 +102,6 @@ export const updateBudget = async (
       endDate.setUTCHours(0, 0, 0, 0);
     }
 
-    // Add debug log
-    console.log("Normalized dates:", {
-      startDate: startDate?.toISOString(),
-      endDate: endDate?.toISOString(),
-    });
-
     if (startDate && endDate && startDate > endDate) {
       res.status(400).json({
         error: "Start date must be before or equal to end date",
@@ -163,7 +157,7 @@ export const deleteBudget = async (
       return;
     }
 
-    res.status(200).json({ message: "Budget archived successfully" });
+    res.status(200).json({ message: "Budget deleted successfully" });
   } catch (error) {
     console.error("Error in deleteBudget controller", (error as Error).message);
     res.status(500).json({ error: "Internal server error" });

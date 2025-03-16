@@ -86,14 +86,15 @@ export const getCategories = async (req: Request, res: Response) => {
 };
 
 export const updateCategory = async (
-  req: Request,
+  req: CustomRequest,
   res: Response
 ): Promise<void> => {
   try {
     const { id } = req.params;
     const { icon, title } = req.body;
+    const userId = req.user?._id;
 
-    const category = await Category.findById(id);
+    const category = await Category.findOne({  _id: id, userId });
 
     if (!category) {
       res.status(404).json({ error: "Category not found" });
@@ -102,6 +103,7 @@ export const updateCategory = async (
 
     // Check if new title already exists for another category
     const existingCategory = await Category.findOne({
+      userId,
       title,
       _id: { $ne: id }, // exclude current category from check
     });
@@ -113,16 +115,10 @@ export const updateCategory = async (
       return;
     }
 
-    const updatedCategory = await Category.findByIdAndUpdate(
-      id,
-      { icon, title },
-      { new: true } // return updated document
-    );
+    category.icon = icon;
+    category.title = title;
 
-    if (!updatedCategory) {
-      res.status(400).json({ error: "Failed to update category" });
-      return;
-    }
+    const updatedCategory = await category.save();
 
     res.status(200).json(updatedCategory);
   } catch (error) {

@@ -29,10 +29,10 @@ interface IBudgetModel extends mongoose.Model<IBudget> {
   ): Promise<IBudget | null>;
 }
 
-const budgetSchema = new Schema<IBudget>(
+const budgetSchema: Schema = new Schema<IBudget>(
   {
     userId: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
@@ -166,6 +166,8 @@ Transaction.schema.post("save", async function (doc: ITransaction) {
     }
   }
 });
+
+budgetSchema.index({ userId: 1, name: 1 }, { unique: true });
 
 const Budget = mongoose.model<IBudget, IBudgetModel>("Budget", budgetSchema);
 

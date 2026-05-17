@@ -88,6 +88,9 @@ const budgetSchema = new Schema<IBudget>(
    }
 );
 
+// Enforce uniqueness per user — same budget name can exist across different users
+budgetSchema.index({ userId: 1, name: 1 }, { unique: true });
+
 // Add virtual for remaining amount
 budgetSchema.virtual("remainingAmount").get(function (this: IBudget) {
   const totalSpent = this.categories.reduce((sum, cat) => sum + cat.spent, 0);

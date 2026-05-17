@@ -1,12 +1,8 @@
 import { Request, Response } from "express";
 import Budget from "../models/budget.model";
 
-interface CustomRequest extends Request {
-  user?: any;
-}
-
 export const createBudget = async (
-  req: CustomRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
@@ -46,7 +42,7 @@ export const createBudget = async (
 };
 
 export const getUserBudgets = async (
-  req: CustomRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
@@ -81,11 +77,12 @@ export const getUserBudgets = async (
 };
 
 export const updateBudget = async (
-  req: CustomRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const { id } = req.params;
+    const userId = req.user!._id;
     const updateData = req.body;
 
     const startDate = updateData.startDate
@@ -113,6 +110,11 @@ export const updateBudget = async (
 
     if (!budget) {
       res.status(404).json({ error: "Budget not found" });
+      return;
+    }
+
+    if (budget.userId.toString() !== userId) {
+      res.status(403).json({ error: "Not authorized to update this budget" });
       return;
     }
 
@@ -150,13 +152,21 @@ export const deleteBudget = async (
 ): Promise<void> => {
   try {
     const { id } = req.params;
-    const budget = await Budget.findByIdAndDelete(id);
+    const userId = req.user!._id;
+
+    const budget = await Budget.findById(id);
 
     if (!budget) {
       res.status(404).json({ error: "Budget not found" });
       return;
     }
 
+    if (budget.userId.toString() !== userId) {
+      res.status(403).json({ error: "Not authorized to delete this budget" });
+      return;
+    }
+
+    await budget.deleteOne();
     res.status(200).json({ message: "Budget deleted successfully" });
   } catch (error) {
     console.error("Error in deleteBudget controller", (error as Error).message);

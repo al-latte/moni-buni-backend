@@ -1,19 +1,15 @@
 import Category from "../models/category.model";
 import { Request, Response } from "express";
 
-interface CustomRequest extends Request {
-  user?: any;
-}
-
 export const addCategory = async (
-  req: CustomRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const { icon, title } = req.body;
-    const userId = req.user?._id;
+    const userId = req.user!._id;
 
-    const category = await Category.findOne({ title });
+    const category = await Category.findOne({ title, userId });
 
     if (category) {
       res.status(400).json({ error: "Category already exists" });
@@ -47,14 +43,22 @@ export const addCategory = async (
 export const deleteCategory = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const category = await Category.findByIdAndDelete(id);
+    const userId = req.user!._id;
+
+    const category = await Category.findById(id);
 
     if (!category) {
-      res.status(404).json({ error: "category not found" });
+      res.status(404).json({ error: "Category not found" });
       return;
     }
 
-    res.status(200).json({ message: "category deleted successfully" });
+    if (category.userId.toString() !== userId) {
+      res.status(403).json({ error: "Not authorized to delete this category" });
+      return;
+    }
+
+    await category.deleteOne();
+    res.status(200).json({ message: "Category deleted successfully" });
   } catch (error) {
     console.error(
       "Error in deleteCategory controller",
@@ -86,26 +90,25 @@ export const getCategories = async (req: Request, res: Response) => {
 };
 
 export const updateCategory = async (
-  req: CustomRequest,
+  req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const { id } = req.params;
     const { icon, title } = req.body;
-    const userId = req.user?._id;
+    const userId = req.user!._id;
 
-    const category = await Category.findOne({  _id: id, userId });
+    const category = await Category.findOne({ _id: id, userId });
 
     if (!category) {
       res.status(404).json({ error: "Category not found" });
       return;
     }
 
-    // Check if new title already exists for another category
     const existingCategory = await Category.findOne({
       userId,
       title,
-      _id: { $ne: id }, // exclude current category from check
+      _id: { $ne: id },
     });
 
     if (existingCategory) {

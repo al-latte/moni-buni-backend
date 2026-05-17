@@ -23,6 +23,9 @@ const walletSchema = new Schema({
     }
 }, {timestamps: true})
 
+// Enforce uniqueness per user — same wallet name can exist across different users
+walletSchema.index({ userId: 1, title: 1 }, { unique: true });
+
 const Wallet = mongoose.model("Wallet", walletSchema)
 
 export default Wallet

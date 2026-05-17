@@ -201,14 +201,31 @@ export const getTransactions = async (
 ): Promise<void> => {
   try {
     const { userId } = req.params;
-    const transactions = await Transaction.find({ userId });
+    const { startDate, endDate, walletId, page = "1", limit = "20" } = req.query as Record<string, string>;
 
-    if (!transactions.length) {
-      res.status(404).json({ error: "User has no transactions" });
-      return;
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
+    const skip = (pageNum - 1) * limitNum;
+
+    const filter: Record<string, unknown> = { userId };
+    if (walletId) filter.wallet = walletId;
+    if (startDate || endDate) {
+      filter.date = {};
+      if (startDate) (filter.date as Record<string, Date>).$gte = new Date(startDate);
+      if (endDate) (filter.date as Record<string, Date>).$lte = new Date(endDate);
     }
 
-    res.status(200).json({ transactions });
+    const [transactions, total] = await Promise.all([
+      Transaction.find(filter).sort({ date: -1 }).skip(skip).limit(limitNum),
+      Transaction.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      transactions,
+      total,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+    });
   } catch (error) {
     console.error(
       "Error in getTransactions controller",

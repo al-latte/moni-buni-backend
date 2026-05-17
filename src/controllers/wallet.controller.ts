@@ -1,16 +1,12 @@
 import Wallet from "../models/wallet.model"
 import { Request, Response } from 'express';
 
-interface CustomRequest extends Request {
-    user?: any;
-}
-
-export const addWallet = async (req: CustomRequest, res: Response) => {
+export const addWallet = async (req: Request, res: Response) => {
     try {
         const {title, balance, description, setAsDefault} = req.body
-        const userId = req.user._id
+        const userId = req.user!._id
 
-        const wallet = await Wallet.findOne({title})
+        const wallet = await Wallet.findOne({title, userId})
 
         if(wallet) {
             res.status(400).json({error: "Wallet already exists"})
@@ -19,9 +15,9 @@ export const addWallet = async (req: CustomRequest, res: Response) => {
 
         const newWallet = new Wallet({
             userId,
-            title, 
-            balance, 
-            description, 
+            title,
+            balance,
+            description,
             setAsDefault
           });
 
@@ -39,52 +35,51 @@ export const addWallet = async (req: CustomRequest, res: Response) => {
         } else {
             res.status(400).json({error: "Invalid wallet data"})
         }
-       
+
     } catch (error) {
         console.log("Error in addWallet controller", (error as Error).message)
+        res.status(500).json({error: "Internal server error"})
     }
 }
 
-export const editWallet = async (req: CustomRequest, res: Response) => {
+export const editWallet = async (req: Request, res: Response) => {
     try {
         const {title, balance, description, setAsDefault} = req.body
-        const userId = req.user._id
+        const userId = req.user!._id
         const {id} = req.params
 
         const wallet = await Wallet.findById(id)
 
         if(!wallet) {
-            res.status(404).json({ error: "wallet not found" });
+            res.status(404).json({ error: "Wallet not found" });
             return;
         }
 
-        if(wallet) {
-            const updatedWallet = {
-                title, 
-                balance, 
-                description, 
-                setAsDefault
-            }
-            const result = await Wallet.findByIdAndUpdate(id, updatedWallet, {new: true})
-            
-            if (!result) {
-                res.status(404).json({ error: "Failed to update wallet" });
-                return;
-            }
-
-            res.status(200).json({
-                _id: result._id,
-                userId: result.userId,
-                title: result.title,
-                balance: result.balance,
-                description: result.description,
-                setAsDefault: result.setAsDefault,
-            })
-           
-        } else {
-            res.status(400).json({error: "Invalid wallet data"})
+        if(wallet.userId?.toString() !== userId) {
+            res.status(403).json({ error: "Not authorized to update this wallet" });
+            return;
         }
-       
+
+        const result = await Wallet.findByIdAndUpdate(
+            id,
+            { title, balance, description, setAsDefault },
+            { new: true }
+        )
+
+        if (!result) {
+            res.status(404).json({ error: "Failed to update wallet" });
+            return;
+        }
+
+        res.status(200).json({
+            _id: result._id,
+            userId: result.userId,
+            title: result.title,
+            balance: result.balance,
+            description: result.description,
+            setAsDefault: result.setAsDefault,
+        })
+
     } catch (error) {
         console.log("Error in editWallet controller", (error as Error).message)
         res.status(500).json({error: "Internal server error"})
@@ -94,14 +89,22 @@ export const editWallet = async (req: CustomRequest, res: Response) => {
 export const deleteWallet = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const wallet = await Wallet.findByIdAndDelete(id);
+        const userId = req.user!._id;
+
+        const wallet = await Wallet.findById(id);
 
         if (!wallet) {
-            res.status(404).json({ error: "wallet not found" });
-            return; 
+            res.status(404).json({ error: "Wallet not found" });
+            return;
         }
-        
-        res.status(200).json({ message: "wallet deleted successfully" });
+
+        if(wallet.userId?.toString() !== userId) {
+            res.status(403).json({ error: "Not authorized to delete this wallet" });
+            return;
+        }
+
+        await wallet.deleteOne();
+        res.status(200).json({ message: "Wallet deleted successfully" });
 
     } catch (error) {
         console.error("Error in deleteWallet controller", (error as Error).message);
